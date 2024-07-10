@@ -1,31 +1,55 @@
 import RPi.GPIO as GPIO
-from time import sleep
+import time
 
-servoPin = 12 
-SERVO_MAX_DUTY = 12 # 최대 주기 (180도)
-SERVO_MIN_DUTY = 3 # 최소 주기 (0도)
+# 핀 설정
+in1 = 17
+in2 = 27
+ena = 22
 
-GPIO.setmode(GPIO.BOARD) # GPIO 설정
-GPIO.setup(servoPin, GPIO.OUT) # 서보핀 출력 설정
+# GPIO 핀 모드 설정
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(in1, GPIO.OUT)
+GPIO.setup(in2, GPIO.OUT)
+GPIO.setup(ena, GPIO.OUT)
 
-servo = GPIO.PWM(servoPin, 50) # 서보핀을 PWM 모드 50Hz로 사용
-servo.start(0)
+# PWM 설정
+pwm = GPIO.PWM(ena, 1000)  # PWM 주파수 설정
+pwm.start(25)  # 초기 듀티 사이클 설정 (25%)
 
-def setServoPos(degree):
-    # 180도가 최대 각도임
-    if degree > 180:
-        degree = 180
+def motor_forward():
+    GPIO.output(in1, GPIO.HIGH)
+    GPIO.output(in2, GPIO.LOW)
 
-    # 각도(degree)를 duty로 변경
-    duty = SERVO_MIN_DUTY+(degree*(SERVO_MAX_DUTY-SERVO_MIN_DUTY)/180.0)
-    
-    #각도와 duty 값 출력 (디버깅 용도)
-    print("각도 (degree) : {} to {}(duty)".format(degree, duty))
+def motor_backward():
+    GPIO.output(in1, GPIO.LOW)
+    GPIO.output(in2, GPIO.HIGH)
 
-    servo.ChangeDutyCycle(duty)
+def motor_stop():
+    GPIO.output(in1, GPIO.LOW)
+    GPIO.output(in2, GPIO.LOW)
 
+try:
+    while True:
+        print("Motor Forward")
+        motor_forward()
+        time.sleep(5)
+        
+        print("Motor Stop")
+        motor_stop()
+        time.sleep(2)
+        
+        print("Motor Backward")
+        motor_backward()
+        time.sleep(5)
+        
+        print("Motor Stop")
+        motor_stop()
+        time.sleep(2)
+except KeyboardInterrupt:
+    pass
 
-setServoPos(45) # 45도 모터 회전
+pwm.stop()
+GPIO.cleanup()
 
 
 servo.stop() # 서보 모터 정지
